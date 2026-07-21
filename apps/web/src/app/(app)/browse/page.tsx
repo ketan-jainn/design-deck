@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
-import { Suspense, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { api } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -21,8 +21,18 @@ function BrowseContent() {
   const initialTopic = useSearchParams().get("topic") ?? undefined;
   const [q, setQ] = useState("");
   const [activeTopic, setActiveTopic] = useState<string | undefined>(initialTopic);
-  const cats = useQuery({ queryKey: ["categories"], queryFn: api.categories });
-  const questions = useQuery({ queryKey: ["questions-list", activeTopic, q], queryFn: () => api.questions({ topic: activeTopic, q }) });
+  const cats = useQuery({ queryKey: ["categories"], queryFn: api.categories, staleTime: Infinity, refetchOnWindowFocus: false });
+  const questions = useQuery({
+    queryKey: ["questions-list", activeTopic],
+    queryFn: () => api.questions({ topic: activeTopic }),
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+  });
+  const filtered = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    if (!needle) return questions.data ?? [];
+    return (questions.data ?? []).filter((row) => row.prompt.toLowerCase().includes(needle));
+  }, [questions.data, q]);
 
   return (
     <div className="mx-auto max-w-md px-5 pt-8">
@@ -40,7 +50,7 @@ function BrowseContent() {
         </div>
       </div>
       <ul className="space-y-2">
-        {(questions.data ?? []).map((row) => (
+        {filtered.map((row) => (
           <li key={row.id}>
             <Link href={`/q/${row.id}`} className="block rounded-xl border border-border bg-card p-4 transition-colors hover:bg-accent">
               <div className="mb-2 flex items-center gap-2">
@@ -50,7 +60,7 @@ function BrowseContent() {
             </Link>
           </li>
         ))}
-        {(questions.data ?? []).length === 0 && !questions.isLoading && <li className="py-8 text-center text-sm text-muted-foreground">No questions match.</li>}
+        {filtered.length === 0 && !questions.isLoading && <li className="py-8 text-center text-sm text-muted-foreground">No questions match.</li>}
       </ul>
     </div>
   );

@@ -126,8 +126,8 @@ Base URL: `/api` (proxied by Next.js BFF)
 | `DATABASE_USERNAME` | API | `rapidsd` |
 | `DATABASE_PASSWORD` | API | `rapidsd` |
 | `JWT_SECRET` | API | dev placeholder in application.yml |
-| `OPENAI_API_KEY` | API | empty |
-| `OPENAI_MODEL` | API | `gpt-4.1-mini` |
+| `GEMINI_API_KEY` | API | empty |
+| `GEMINI_MODEL` | API | `gemini-2.0-flash` |
 | `FRONTEND_URL` | API | `http://localhost:3000` |
 | `API_BASE_URL` | Web (server proxy) | `http://localhost:8080` |
 
@@ -179,7 +179,7 @@ After backend or frontend changes:
 
 1. Signup → lands on `/home`
 2. Browse categories and search questions
-3. Start session → submit attempt → AI grade (requires `OPENAI_API_KEY`)
+3. Start session → submit attempt → AI grade (requires `GEMINI_API_KEY`)
 4. Progress dashboard loads stats
 5. Settings: update profile, logout works
 

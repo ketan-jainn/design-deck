@@ -8,7 +8,7 @@ const REFRESH = "rsd_refresh";
 export async function proxy(req: NextRequest, upstreamPath: string) {
   const body = req.method === "GET" ? undefined : await req.text();
   const cookieStore = await cookies();
-  const access = cookieStore.get(ACCESS)?.value;
+  const access = cookieStore.get(ACCESS)?.value ?? req.cookies.get(ACCESS)?.value;
   const headers: HeadersInit = {
     "content-type": req.headers.get("content-type") ?? "application/json",
   };
@@ -44,7 +44,7 @@ function cookieOptions(maxAge: number) {
   return {
     httpOnly: true,
     sameSite: "lax" as const,
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.COOKIE_SECURE === "true",
     path: "/",
     maxAge,
   };

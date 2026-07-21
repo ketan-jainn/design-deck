@@ -1,5 +1,13 @@
 package dev.designdeck.api.service.impl;
 
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import dev.designdeck.api.dto.catalog.CategoryDto;
 import dev.designdeck.api.dto.catalog.QuestionDto;
 import dev.designdeck.api.exception.ApiException;
@@ -7,12 +15,6 @@ import dev.designdeck.api.mapper.CatalogMapper;
 import dev.designdeck.api.repository.CategoryRepository;
 import dev.designdeck.api.repository.QuestionRepository;
 import dev.designdeck.api.service.CatalogService;
-import java.util.List;
-import java.util.UUID;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional(readOnly = true)
@@ -37,9 +39,11 @@ public class CatalogServiceImpl implements CatalogService {
   public List<QuestionDto> questions(String topic, String q) {
     var normalizedTopic = topic == null || topic.isBlank() ? null : topic;
     var search = q == null || q.isBlank() ? null : q;
-    return questionRepository.findFiltered(normalizedTopic, search, PageRequest.of(0, 200)).stream()
-        .map(catalogMapper::toQuestionDto)
-        .toList();
+    var page = PageRequest.of(0, 200);
+    var rows = search == null
+        ? questionRepository.findByTopic(normalizedTopic, page)
+        : questionRepository.findByTopicAndSearch(normalizedTopic, search, page);
+    return rows.stream().map(catalogMapper::toQuestionDto).toList();
   }
 
   @Override

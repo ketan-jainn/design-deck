@@ -24,8 +24,8 @@ services:
       DATABASE_USERNAME: rapidsd
       DATABASE_PASSWORD: rapidsd
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production-use-a-long-random-secret}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-AQ.Ab8RN6LUgWzT0Few_-7sc5WNvZw41iG5g4MOFQTQpv9m8uvlaA}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.0-flash}
       FRONTEND_URL: http://localhost:3000
     ports:
       - "8080:8080"
@@ -39,6 +39,7 @@ services:
       dockerfile: apps/web/Dockerfile
     environment:
       API_BASE_URL: http://api:8080
+      COOKIE_SECURE: "false"
     ports:
       - "3000:3000"
     depends_on:

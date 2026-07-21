@@ -6,7 +6,7 @@ RapidSD is a rapid-fire system design practice app in a local monorepo:
 - `apps/api`: Spring Boot REST API (JPA + Spring Data)
 - PostgreSQL with Flyway migrations
 - Spring-owned JWT auth with BCrypt password hashing
-- OpenAI-backed answer grading
+- Gemini-backed answer grading
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for system design and [docs/AI_HANDOFF.md](docs/AI_HANDOFF.md) for AI/developer onboarding.
 
@@ -33,8 +33,8 @@ DATABASE_URL=jdbc:postgresql://localhost:5432/rapidsd
 DATABASE_USERNAME=rapidsd
 DATABASE_PASSWORD=rapidsd
 JWT_SECRET=replace-with-a-long-random-secret
-OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4.1-mini
+GEMINI_API_KEY=your-key-from-aistudio
+GEMINI_MODEL=gemini-2.0-flash
 FRONTEND_URL=http://localhost:3000
 API_BASE_URL=http://localhost:8080
 ```

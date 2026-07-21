@@ -11,10 +11,11 @@ type Method = "GET" | "POST" | "PATCH";
 async function request<T>(path: string, method: Method = "GET", body?: unknown): Promise<T> {
   const res = await fetch(path, {
     method,
+    credentials: "same-origin",
     headers: body ? { "content-type": "application/json" } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (res.status === 401 && typeof window !== "undefined" && !location.pathname.startsWith("/auth")) {
+  if ((res.status === 401 || res.status === 403) && typeof window !== "undefined" && !location.pathname.startsWith("/auth")) {
     location.replace("/auth");
   }
   if (!res.ok) {

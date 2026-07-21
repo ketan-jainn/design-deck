@@ -1,22 +1,27 @@
 package dev.designdeck.api.service.impl;
 
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import dev.designdeck.api.dto.grading.GradeDto;
 import dev.designdeck.api.dto.grading.GradeRequest;
 import dev.designdeck.api.exception.ApiException;
 import dev.designdeck.api.service.CatalogService;
 import dev.designdeck.api.service.GradingService;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
 
 @Service
 public class GradingServiceImpl implements GradingService {
@@ -29,8 +34,8 @@ public class GradingServiceImpl implements GradingService {
   public GradingServiceImpl(
       CatalogService catalogService,
       ObjectMapper mapper,
-      @Value("${designdeck.openai-api-key}") String apiKey,
-      @Value("${designdeck.openai-model}") String model) {
+      @Value("${designdeck.gemini-api-key}") String apiKey,
+      @Value("${designdeck.gemini-model}") String model) {
     this.catalogService = catalogService;
     this.mapper = mapper;
     this.apiKey = apiKey;
@@ -40,7 +45,7 @@ public class GradingServiceImpl implements GradingService {
   @Override
   public GradeDto grade(GradeRequest req) {
     if (apiKey == null || apiKey.isBlank()) {
-      throw new ApiException(HttpStatus.BAD_REQUEST, "Missing OPENAI_API_KEY");
+      throw new ApiException(HttpStatus.BAD_REQUEST, "Missing GEMINI_API_KEY");
     }
     var q = catalogService.question(req.questionId());
     var answerKey = q.answerKey();
@@ -60,19 +65,19 @@ public class GradingServiceImpl implements GradingService {
         + "\n\nCANDIDATE ANSWER:\n"
         + req.userAnswer();
     try {
+      var url = "https://generativelanguage.googleapis.com/v1beta/models/"
+          + model
+          + ":generateContent?key="
+          + URLEncoder.encode(apiKey, StandardCharsets.UTF_8);
       var body = mapper.writeValueAsString(Map.of(
-          "model",
-          model,
-          "response_format",
-          Map.of("type", "json_object"),
-          "messages",
-          List.of(Map.of("role", "system", "content", system), Map.of("role", "user", "content", user))));
+          "systemInstruction", Map.of("parts", List.of(Map.of("text", system))),
+          "contents", List.of(Map.of("role", "user", "parts", List.of(Map.of("text", user)))),
+          "generationConfig", Map.of("responseMimeType", "application/json")));
       var response = client
           .sendAsync(
-              HttpRequest.newBuilder(URI.create("https://api.openai.com/v1/chat/completions"))
+              HttpRequest.newBuilder(URI.create(url))
                   .timeout(Duration.ofSeconds(30))
                   .header("content-type", "application/json")
-                  .header("authorization", "Bearer " + apiKey)
                   .POST(HttpRequest.BodyPublishers.ofString(body))
                   .build(),
               HttpResponse.BodyHandlers.ofString())
@@ -80,7 +85,15 @@ public class GradingServiceImpl implements GradingService {
       if (response.statusCode() >= 400) {
         throw new ApiException(HttpStatus.BAD_GATEWAY, "AI grading failed");
       }
-      var text = mapper.readTree(response.body()).path("choices").path(0).path("message").path("content").asText("{}");
+      var text = mapper
+          .readTree(response.body())
+          .path("candidates")
+          .path(0)
+          .path("content")
+          .path("parts")
+          .path(0)
+          .path("text")
+          .asText("{}");
       var node = mapper.readTree(text);
       return new GradeDto(
           clamp(node.path("score").asInt()),
@@ -90,7 +103,7 @@ public class GradingServiceImpl implements GradingService {
           node.path("summary").asText(""));
     } catch (ApiException e) {
       throw e;
-    } catch (java.io.IOException e) {
+    } catch (Exception e) {
       throw new ApiException(HttpStatus.BAD_GATEWAY, "AI grading failed");
     }
   }

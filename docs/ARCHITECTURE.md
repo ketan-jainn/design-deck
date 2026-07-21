@@ -9,7 +9,7 @@ flowchart LR
   Browser --> Web["apps/web :3000"]
   Web -->|"BFF /api/* proxy"| API["apps/api :8080"]
   API --> DB[(PostgreSQL + Flyway)]
-  API --> OpenAI[OpenAI API]
+  API --> Gemini[Gemini API]
 ```
 
 ## Repository layout
