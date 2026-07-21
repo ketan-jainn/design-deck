@@ -2,9 +2,9 @@ package dev.designdeck.api.exception;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@RestController
+@RestControllerAdvice
 public class ApiErrors {
   @ExceptionHandler(ApiException.class)
   ResponseEntity<String> api(ApiException e) {

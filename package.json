@@ -12,6 +12,9 @@
     "build": "npm run build:web",
     "build:web": "npm --workspace apps/web run build",
     "build:api": "mvn -f apps/api/pom.xml test",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down",
+    "docker:db": "docker compose -f docker-compose.dev.yml up -d",
     "lint": "npm --workspace apps/web run lint",
     "format": "prettier --write ."
   },

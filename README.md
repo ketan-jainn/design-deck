@@ -1,12 +1,14 @@
 # RapidSD
 
-RapidSD is a rapid-fire system design practice app detached into a local monorepo:
+RapidSD is a rapid-fire system design practice app in a local monorepo:
 
 - `apps/web`: Next.js App Router frontend
-- `apps/api`: Spring Boot REST API
+- `apps/api`: Spring Boot REST API (JPA + Spring Data)
 - PostgreSQL with Flyway migrations
 - Spring-owned JWT auth with BCrypt password hashing
 - OpenAI-backed answer grading
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for system design and [docs/AI_HANDOFF.md](docs/AI_HANDOFF.md) for AI/developer onboarding.
 
 ## Prerequisites
 
@@ -14,11 +16,17 @@ RapidSD is a rapid-fire system design practice app detached into a local monorep
 - npm 10+
 - Java 21+
 - Maven 3.9+
-- PostgreSQL 15+
+- PostgreSQL 15+ (or Docker)
 
 ## Configuration
 
-Create a PostgreSQL database and set API environment variables as needed:
+Copy the example env file and edit as needed:
+
+```bash
+cp .env.example .env
+```
+
+Key variables:
 
 ```bash
 DATABASE_URL=jdbc:postgresql://localhost:5432/rapidsd
@@ -28,11 +36,6 @@ JWT_SECRET=replace-with-a-long-random-secret
 OPENAI_API_KEY=sk-...
 OPENAI_MODEL=gpt-4.1-mini
 FRONTEND_URL=http://localhost:3000
-```
-
-The web app uses `API_BASE_URL` for server-side route handlers:
-
-```bash
 API_BASE_URL=http://localhost:8080
 ```
 
@@ -42,6 +45,12 @@ Install frontend dependencies:
 
 ```bash
 npm install
+```
+
+Run PostgreSQL only (Docker):
+
+```bash
+npm run docker:db
 ```
 
 Run the API:
@@ -57,6 +66,21 @@ npm run dev:web
 ```
 
 Open `http://localhost:3000`.
+
+## Docker (full stack)
+
+```bash
+cp .env.example .env
+npm run docker:up
+```
+
+This starts PostgreSQL, the API on `:8080`, and the web app on `:3000`.
+
+Stop containers:
+
+```bash
+npm run docker:down
+```
 
 ## Verification
 
