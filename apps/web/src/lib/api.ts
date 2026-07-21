@@ -1,5 +1,11 @@
 import type { Category, Grade, Profile, ProgressSummary, Question } from "./types";
 
+type AuthResponse = {
+  accessToken: string;
+  refreshToken: string;
+  profile: Profile;
+};
+
 type Method = "GET" | "POST" | "PATCH";
 
 async function request<T>(path: string, method: Method = "GET", body?: unknown): Promise<T> {
@@ -20,9 +26,9 @@ async function request<T>(path: string, method: Method = "GET", body?: unknown):
 
 export const api = {
   signup: (data: { email: string; password: string; displayName?: string }) =>
-    request<Profile>("/api/auth/signup", "POST", data),
+    request<AuthResponse>("/api/auth/signup", "POST", data),
   login: (data: { email: string; password: string }) =>
-    request<Profile>("/api/auth/login", "POST", data),
+    request<AuthResponse>("/api/auth/login", "POST", data),
   logout: () => request<{ ok: true }>("/api/auth/logout", "POST"),
   forgotPassword: (data: { email: string }) =>
     request<{ ok: true }>("/api/auth/forgot-password", "POST", data),

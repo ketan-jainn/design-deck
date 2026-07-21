@@ -1,10 +1,10 @@
 package dev.designdeck.api.controller;
 
-import dev.designdeck.api.dto.ApiDtos.AuthResponse;
-import dev.designdeck.api.dto.ApiDtos.ForgotRequest;
-import dev.designdeck.api.dto.ApiDtos.LoginRequest;
-import dev.designdeck.api.dto.ApiDtos.ResetRequest;
-import dev.designdeck.api.dto.ApiDtos.SignupRequest;
+import dev.designdeck.api.dto.auth.AuthResponse;
+import dev.designdeck.api.dto.auth.ForgotRequest;
+import dev.designdeck.api.dto.auth.LoginRequest;
+import dev.designdeck.api.dto.auth.ResetRequest;
+import dev.designdeck.api.dto.auth.SignupRequest;
 import dev.designdeck.api.security.JwtService;
 import dev.designdeck.api.service.AuthService;
 import jakarta.validation.Valid;
