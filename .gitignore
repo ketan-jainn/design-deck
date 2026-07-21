@@ -25,7 +25,6 @@ dist-ssr
 *.sln
 *.sw?
 
-# Environment secrets (template stays tracked: .env.example)
 .env
 
 # Spring Boot
