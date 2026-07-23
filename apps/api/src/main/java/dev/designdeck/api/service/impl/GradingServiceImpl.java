@@ -15,8 +15,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import dev.designdeck.api.dto.catalog.AnswerKeyDto;
+import dev.designdeck.api.dto.catalog.QuestionDto;
 import dev.designdeck.api.dto.grading.GradeDto;
 import dev.designdeck.api.dto.grading.GradeRequest;
 import dev.designdeck.api.exception.ApiException;
@@ -47,14 +50,14 @@ public class GradingServiceImpl implements GradingService {
     if (apiKey == null || apiKey.isBlank()) {
       throw new ApiException(HttpStatus.BAD_REQUEST, "Missing GEMINI_API_KEY");
     }
-    var q = catalogService.question(req.questionId());
-    var answerKey = q.answerKey();
+    QuestionDto q = catalogService.question(req.questionId());
+    AnswerKeyDto answerKey = q.answerKey();
     if (answerKey == null) {
       throw new ApiException(HttpStatus.NOT_FOUND, "Question not found");
     }
-    var system =
+    String system =
         "Grade an SDE-2 system-design answer. Return only JSON: {\"score\":0,\"missing\":[],\"wrong\":[],\"improvements\":[],\"summary\":\"\"}. Keep feedback concise.";
-    var user = "QUESTION:\n"
+    String user = "QUESTION:\n"
         + q.prompt()
         + "\n\nANSWER KEY:\n"
         + answerKey.bullets()
@@ -65,15 +68,15 @@ public class GradingServiceImpl implements GradingService {
         + "\n\nCANDIDATE ANSWER:\n"
         + req.userAnswer();
     try {
-      var url = "https://generativelanguage.googleapis.com/v1beta/models/"
+      String url = "https://generativelanguage.googleapis.com/v1beta/models/"
           + model
           + ":generateContent?key="
           + URLEncoder.encode(apiKey, StandardCharsets.UTF_8);
-      var body = mapper.writeValueAsString(Map.of(
+      String body = mapper.writeValueAsString(Map.of(
           "systemInstruction", Map.of("parts", List.of(Map.of("text", system))),
           "contents", List.of(Map.of("role", "user", "parts", List.of(Map.of("text", user)))),
           "generationConfig", Map.of("responseMimeType", "application/json")));
-      var response = client
+      HttpResponse<String> response = client
           .sendAsync(
               HttpRequest.newBuilder(URI.create(url))
                   .timeout(Duration.ofSeconds(30))
@@ -85,7 +88,7 @@ public class GradingServiceImpl implements GradingService {
       if (response.statusCode() >= 400) {
         throw new ApiException(HttpStatus.BAD_GATEWAY, "AI grading failed");
       }
-      var text = mapper
+      String text = mapper
           .readTree(response.body())
           .path("candidates")
           .path(0)
@@ -94,7 +97,7 @@ public class GradingServiceImpl implements GradingService {
           .path(0)
           .path("text")
           .asText("{}");
-      var node = mapper.readTree(text);
+      JsonNode node = mapper.readTree(text);
       return new GradeDto(
           clamp(node.path("score").asInt()),
           strings(node.path("missing")),
@@ -104,7 +107,15 @@ public class GradingServiceImpl implements GradingService {
     } catch (ApiException e) {
       throw e;
     } catch (Exception e) {
-      throw new ApiException(HttpStatus.BAD_GATEWAY, "AI grading failed");
+      throw new ApiException(HttpStatus.BAD_GATEWAY, "AI grading failed: " + e.getMessage());
+    }
+  }
+
+  private String geminiError(String body) {
+    try {
+      return mapper.readTree(body).path("error").path("message").asText(body);
+    } catch (Exception e) {
+      return body;
     }
   }
 
@@ -112,8 +123,8 @@ public class GradingServiceImpl implements GradingService {
     return Math.max(0, Math.min(100, value));
   }
 
-  private List<String> strings(com.fasterxml.jackson.databind.JsonNode node) {
-    var out = new ArrayList<String>();
+  private List<String> strings(JsonNode node) {
+    ArrayList<String> out = new ArrayList<>();
     if (node.isArray()) {
       node.forEach(v -> out.add(v.asText()));
     }

@@ -34,7 +34,7 @@ DATABASE_USERNAME=rapidsd
 DATABASE_PASSWORD=rapidsd
 JWT_SECRET=replace-with-a-long-random-secret
 GEMINI_API_KEY=your-key-from-aistudio
-GEMINI_MODEL=gemini-2.0-flash
+GEMINI_MODEL=gemini-flash-latest
 FRONTEND_URL=http://localhost:3000
 API_BASE_URL=http://localhost:8080
 ```

@@ -26,8 +26,8 @@ public class JwtService {
 
   public String issue(UUID userId, Duration ttl) {
     try {
-      var header = b64(mapper.writeValueAsBytes(Map.of("alg", "HS256", "typ", "JWT")));
-      var payload = b64(mapper.writeValueAsBytes(Map.of(
+      String header = b64(mapper.writeValueAsBytes(Map.of("alg", "HS256", "typ", "JWT")));
+      String payload = b64(mapper.writeValueAsBytes(Map.of(
           "sub", userId.toString(),
           "exp", Instant.now().plus(ttl).getEpochSecond())));
       return header + "." + payload + "." + sign(header + "." + payload);
@@ -38,11 +38,11 @@ public class JwtService {
 
   public java.util.Optional<UUID> verify(String token) {
     try {
-      var parts = token.split("\\.");
+      String[] parts = token.split("\\.");
       if (parts.length != 3 || !MessageDigest.isEqual(parts[2].getBytes(StandardCharsets.UTF_8), sign(parts[0] + "." + parts[1]).getBytes(StandardCharsets.UTF_8))) {
         return java.util.Optional.empty();
       }
-      var payload = mapper.readValue(Base64.getUrlDecoder().decode(parts[1]), new TypeReference<Map<String, Object>>() {});
+      Map<String, Object> payload = mapper.readValue(Base64.getUrlDecoder().decode(parts[1]), new TypeReference<Map<String, Object>>() {});
       if (((Number) payload.get("exp")).longValue() < Instant.now().getEpochSecond()) return java.util.Optional.empty();
       return java.util.Optional.of(UUID.fromString((String) payload.get("sub")));
     } catch (Exception e) {
@@ -51,7 +51,7 @@ public class JwtService {
   }
 
   private String sign(String data) throws Exception {
-    var mac = Mac.getInstance("HmacSHA256");
+    Mac mac = Mac.getInstance("HmacSHA256");
     mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
     return b64(mac.doFinal(data.getBytes(StandardCharsets.UTF_8)));
   }

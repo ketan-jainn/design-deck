@@ -44,7 +44,7 @@ public class AppUser {
 
   @PrePersist
   void onCreate() {
-    var now = Instant.now();
+    Instant now = Instant.now();
     createdAt = now;
     updatedAt = now;
   }

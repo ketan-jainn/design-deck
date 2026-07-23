@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import dev.designdeck.api.dto.catalog.CategoryDto;
 import dev.designdeck.api.dto.catalog.QuestionDto;
+import dev.designdeck.api.entity.Question;
 import dev.designdeck.api.exception.ApiException;
 import dev.designdeck.api.mapper.CatalogMapper;
 import dev.designdeck.api.repository.CategoryRepository;
@@ -37,10 +38,10 @@ public class CatalogServiceImpl implements CatalogService {
 
   @Override
   public List<QuestionDto> questions(String topic, String q) {
-    var normalizedTopic = topic == null || topic.isBlank() ? null : topic;
-    var search = q == null || q.isBlank() ? null : q;
-    var page = PageRequest.of(0, 200);
-    var rows = search == null
+    String normalizedTopic = topic == null || topic.isBlank() ? null : topic;
+    String search = q == null || q.isBlank() ? null : q;
+    PageRequest page = PageRequest.of(0, 200);
+    List<Question> rows = search == null
         ? questionRepository.findByTopic(normalizedTopic, page)
         : questionRepository.findByTopicAndSearch(normalizedTopic, search, page);
     return rows.stream().map(catalogMapper::toQuestionDto).toList();

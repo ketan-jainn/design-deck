@@ -7,9 +7,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class PracticeMapper {
   public TopicMasteryDto toTopicMasteryDto(TopicMasteryRow row) {
-    var seen = row.getSeen();
-    var correct = row.getCorrect();
-    var mastery = Math.round((float) correct * 100 / Math.max(1, seen));
+    int seen = row.getSeen();
+    int correct = row.getCorrect();
+    int mastery = (int) Math.round((float) correct * 100 / Math.max(1, seen));
     return new TopicMasteryDto(row.getName(), row.getSlug(), row.getColor(), mastery);
   }
 }

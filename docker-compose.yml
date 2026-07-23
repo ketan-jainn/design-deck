@@ -25,7 +25,7 @@ services:
       DATABASE_PASSWORD: rapidsd
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production-use-a-long-random-secret}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-AQ.Ab8RN6LUgWzT0Few_-7sc5WNvZw41iG5g4MOFQTQpv9m8uvlaA}
-      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.0-flash}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-flash-latest}
       FRONTEND_URL: http://localhost:3000
     ports:
       - "8080:8080"

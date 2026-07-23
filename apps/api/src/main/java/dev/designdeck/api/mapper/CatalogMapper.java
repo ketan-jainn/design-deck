@@ -3,6 +3,7 @@ package dev.designdeck.api.mapper;
 import dev.designdeck.api.dto.catalog.AnswerKeyDto;
 import dev.designdeck.api.dto.catalog.CategoryDto;
 import dev.designdeck.api.dto.catalog.QuestionCategoryDto;
+import dev.designdeck.api.dto.catalog.QuestionCategoryDto;
 import dev.designdeck.api.dto.catalog.QuestionDto;
 import dev.designdeck.api.entity.AnswerKey;
 import dev.designdeck.api.entity.Category;
@@ -18,11 +19,11 @@ public class CatalogMapper {
   }
 
   public QuestionDto toQuestionDto(Question question) {
-    var category = question.getCategory();
-    var questionCategory = category == null
+    Category category = question.getCategory();
+    QuestionCategoryDto questionCategory = category == null
         ? null
         : new QuestionCategoryDto(category.getName(), category.getSlug(), category.getColor());
-    var answerKey = question.getAnswerKey();
+    AnswerKey answerKey = question.getAnswerKey();
     return new QuestionDto(
         question.getId(),
         question.getPrompt(),

@@ -52,12 +52,12 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public AuthResponse signup(
       SignupRequest req, Function<UUID, String> accessTokenIssuer, Function<UUID, String> refreshTokenIssuer) {
-    var email = req.email().toLowerCase();
-    var user = new AppUser(email, encoder.encode(req.password()));
-    var displayName = req.displayName() == null || req.displayName().isBlank() ? email.split("@")[0] : req.displayName();
+    String email = req.email().toLowerCase();
+    AppUser user = new AppUser(email, encoder.encode(req.password()));
+    String displayName = req.displayName() == null || req.displayName().isBlank() ? email.split("@")[0] : req.displayName();
     user.setProfile(new Profile(user, displayName));
     appUserRepository.save(user);
-    var userId = user.getId();
+    UUID userId = user.getId();
     return new AuthResponse(
         accessTokenIssuer.apply(userId), refreshTokenIssuer.apply(userId), profile(userId));
   }
@@ -65,7 +65,7 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public AuthResponse login(
       LoginRequest req, Function<UUID, String> accessTokenIssuer, Function<UUID, String> refreshTokenIssuer) {
-    var user = appUserRepository
+    AppUser user = appUserRepository
         .findByEmail(req.email().toLowerCase())
         .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid email or password"));
     if (!encoder.matches(req.password(), user.getPasswordHash())) {
@@ -80,13 +80,13 @@ public class AuthServiceImpl implements AuthService {
   @Override
   @Transactional(readOnly = true)
   public ProfileDto profile(UUID userId) {
-    var profile = requireProfile(userId);
+    Profile profile = requireProfile(userId);
     return authMapper.toProfileDto(profile.getUser(), profile);
   }
 
   @Override
   public ProfileDto updateProfile(UUID userId, UpdateProfileRequest req) {
-    var profile = requireProfile(userId);
+    Profile profile = requireProfile(userId);
     profile.setDisplayName(req.displayName());
     profile.setDailyGoal(req.dailyGoal());
     profileRepository.save(profile);
@@ -96,7 +96,7 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public void createResetToken(String email) {
     appUserRepository.findByEmail(email.toLowerCase()).ifPresent(user -> {
-      var token = UUID.randomUUID().toString() + UUID.randomUUID();
+      String token = UUID.randomUUID().toString() + UUID.randomUUID();
       passwordResetTokenRepository.save(new PasswordResetToken(token, user, Instant.now().plus(Duration.ofHours(1))));
       System.out.println("Password reset link: " + frontendUrl + "/reset-password?token=" + token);
     });
@@ -104,10 +104,10 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void resetPassword(String token, String password) {
-    var resetToken = passwordResetTokenRepository
+    PasswordResetToken resetToken = passwordResetTokenRepository
         .findValidToken(token)
         .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Reset token is invalid or expired"));
-    var user = resetToken.getUser();
+    AppUser user = resetToken.getUser();
     user.setPasswordHash(encoder.encode(password));
     appUserRepository.save(user);
     resetToken.markUsed();

@@ -7,6 +7,7 @@ import dev.designdeck.api.dto.practice.ProgressSummary;
 import dev.designdeck.api.dto.practice.TopicMasteryDto;
 import dev.designdeck.api.entity.AppUser;
 import dev.designdeck.api.entity.Attempt;
+import dev.designdeck.api.entity.Profile;
 import dev.designdeck.api.entity.Question;
 import dev.designdeck.api.entity.SelfRating;
 import dev.designdeck.api.entity.UserCardState;
@@ -66,10 +67,10 @@ public class PracticeServiceImpl implements PracticeService {
   @Override
   @Transactional(readOnly = true)
   public List<QuestionDto> start(UUID userId, int size) {
-    var dueIds = userCardStateRepository.findDueCards(userId, PageRequest.of(0, size)).stream()
+    List<UUID> dueIds = userCardStateRepository.findDueCards(userId, PageRequest.of(0, size)).stream()
         .map(state -> state.getId().getQuestionId())
         .toList();
-    var ids = new ArrayList<>(dueIds);
+    ArrayList<UUID> ids = new ArrayList<>(dueIds);
     if (ids.size() < size) {
       ids.addAll(questionRepository.findRandomUnseenIds(userId, size - ids.size()));
     }
@@ -78,8 +79,8 @@ public class PracticeServiceImpl implements PracticeService {
 
   @Override
   public void submit(UUID userId, AttemptRequest req) {
-    var user = requireUser(userId);
-    var question = requireQuestion(req.questionId());
+    AppUser user = requireUser(userId);
+    Question question = requireQuestion(req.questionId());
     saveAttempt(user, question, req);
     updateCardState(user, question, req);
     updateStreak(userId);
@@ -88,19 +89,19 @@ public class PracticeServiceImpl implements PracticeService {
   @Override
   @Transactional(readOnly = true)
   public ProgressSummary summary(UUID userId) {
-    var profile = profileRepository
+    Profile profile = profileRepository
         .findById(userId)
         .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Profile not found"));
-    var totals = userCardStateRepository.sumTotals(userId);
-    var seen = ((Number) totals[0]).intValue();
-    var correct = ((Number) totals[1]).intValue();
-    var today = (int) attemptRepository.countTodayAttempts(userId);
-    var due = (int) userCardStateRepository.countDue(userId);
-    var topics = userCardStateRepository.topicMastery(userId).stream()
+    Object[] totals = userCardStateRepository.sumTotals(userId);
+    int seen = ((Number) totals[0]).intValue();
+    int correct = ((Number) totals[1]).intValue();
+    int today = (int) attemptRepository.countTodayAttempts(userId);
+    int due = (int) userCardStateRepository.countDue(userId);
+    List<TopicMasteryDto> topics = userCardStateRepository.topicMastery(userId).stream()
         .map(practiceMapper::toTopicMasteryDto)
         .toList();
-    var weakest = topics.stream().sorted(Comparator.comparing(TopicMasteryDto::mastery)).limit(3).toList();
-    var strongest =
+    List<TopicMasteryDto> weakest = topics.stream().sorted(Comparator.comparing(TopicMasteryDto::mastery)).limit(3).toList();
+    List<TopicMasteryDto> strongest =
         topics.stream().sorted(Comparator.comparing(TopicMasteryDto::mastery).reversed()).limit(3).toList();
     return new ProgressSummary(
         seen,
@@ -114,7 +115,7 @@ public class PracticeServiceImpl implements PracticeService {
   }
 
   private void saveAttempt(AppUser user, Question question, AttemptRequest req) {
-    var attempt = new Attempt(UUID.randomUUID(), user, question);
+    Attempt attempt = new Attempt(UUID.randomUUID(), user, question);
     if (req.selfRating() != null) {
       attempt.setSelfRating(SelfRating.valueOf(req.selfRating()));
     }
@@ -125,15 +126,15 @@ public class PracticeServiceImpl implements PracticeService {
   }
 
   private void updateCardState(AppUser user, Question question, AttemptRequest req) {
-    var state = userCardStateRepository.findByUser_IdAndQuestion_Id(user.getId(), question.getId()).orElse(null);
-    var ladder = List.of(1, 3, 7, 14, 30);
-    var ease = state == null ? 2.5d : state.getEase();
-    var interval = state == null ? 0 : state.getIntervalDays();
-    var got = "got".equals(req.selfRating()) || (req.aiScore() != null && req.aiScore() >= 70);
+    UserCardState state = userCardStateRepository.findByUser_IdAndQuestion_Id(user.getId(), question.getId()).orElse(null);
+    List<Integer> ladder = List.of(1, 3, 7, 14, 30);
+    double ease = state == null ? 2.5d : state.getEase();
+    int interval = state == null ? 0 : state.getIntervalDays();
+    boolean got = "got".equals(req.selfRating()) || (req.aiScore() != null && req.aiScore() >= 70);
     if (got) {
       ease = Math.min(3.0d, ease + 0.1d);
-      var nextInterval = 30;
-      for (var day : ladder) {
+      int nextInterval = 30;
+      for (Integer day : ladder) {
         if (day > interval) {
           nextInterval = day;
           break;
@@ -144,7 +145,7 @@ public class PracticeServiceImpl implements PracticeService {
       ease = Math.max(1.3d, ease - 0.2d);
       interval = 0;
     }
-    var due = Instant.now().plus(Duration.ofDays(interval));
+    Instant due = Instant.now().plus(Duration.ofDays(interval));
     if (state == null) {
       state = new UserCardState(user, question);
     }
@@ -158,13 +159,13 @@ public class PracticeServiceImpl implements PracticeService {
   }
 
   private void updateStreak(UUID userId) {
-    var profile = profileRepository
+    Profile profile = profileRepository
         .findById(userId)
         .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Profile not found"));
-    var today = LocalDate.now(ZoneOffset.UTC);
-    var last = profile.getLastActiveDate();
+    LocalDate today = LocalDate.now(ZoneOffset.UTC);
+    LocalDate last = profile.getLastActiveDate();
     if (last == null || !today.equals(last)) {
-      var streak = last != null && today.minusDays(1).equals(last) ? profile.getStreakCount() + 1 : 1;
+      int streak = last != null && today.minusDays(1).equals(last) ? profile.getStreakCount() + 1 : 1;
       profile.setStreakCount(streak);
       profile.setLastActiveDate(today);
       profileRepository.save(profile);

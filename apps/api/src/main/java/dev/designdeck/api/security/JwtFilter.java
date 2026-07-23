@@ -22,7 +22,7 @@ public class JwtFilter extends OncePerRequestFilter {
   @Override
   protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
       throws ServletException, IOException {
-    var header = req.getHeader("Authorization");
+    String header = req.getHeader("Authorization");
     if (header != null && header.startsWith("Bearer ")) {
       jwtService.verify(header.substring(7)).ifPresent(userId ->
           SecurityContextHolder.getContext().setAuthentication(
