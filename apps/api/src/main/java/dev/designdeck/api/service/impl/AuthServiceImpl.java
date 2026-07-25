@@ -14,6 +14,7 @@ import dev.designdeck.api.repository.AppUserRepository;
 import dev.designdeck.api.repository.PasswordResetTokenRepository;
 import dev.designdeck.api.repository.ProfileRepository;
 import dev.designdeck.api.service.AuthService;
+import dev.designdeck.api.service.EmailService;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
@@ -32,6 +33,7 @@ public class AuthServiceImpl implements AuthService {
   private final PasswordResetTokenRepository passwordResetTokenRepository;
   private final AuthMapper authMapper;
   private final PasswordEncoder encoder;
+  private final EmailService emailService;
   private final String frontendUrl;
 
   public AuthServiceImpl(
@@ -40,12 +42,14 @@ public class AuthServiceImpl implements AuthService {
       PasswordResetTokenRepository passwordResetTokenRepository,
       AuthMapper authMapper,
       PasswordEncoder encoder,
+      EmailService emailService,
       @Value("${designdeck.frontend-url}") String frontendUrl) {
     this.appUserRepository = appUserRepository;
     this.profileRepository = profileRepository;
     this.passwordResetTokenRepository = passwordResetTokenRepository;
     this.authMapper = authMapper;
     this.encoder = encoder;
+    this.emailService = emailService;
     this.frontendUrl = frontendUrl;
   }
 
@@ -96,9 +100,11 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public void createResetToken(String email) {
     appUserRepository.findByEmail(email.toLowerCase()).ifPresent(user -> {
+      passwordResetTokenRepository.invalidateActiveTokensForUser(user);
       String token = UUID.randomUUID().toString() + UUID.randomUUID();
       passwordResetTokenRepository.save(new PasswordResetToken(token, user, Instant.now().plus(Duration.ofHours(1))));
-      System.out.println("Password reset link: " + frontendUrl + "/reset-password?token=" + token);
+      String resetLink = frontendUrl + "/reset-password?token=" + token;
+      emailService.sendPasswordResetEmail(user.getEmail(), resetLink);
     });
   }
 

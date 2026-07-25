@@ -27,6 +27,11 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-AQ.Ab8RN6LUgWzT0Few_-7sc5WNvZw41iG5g4MOFQTQpv9m8uvlaA}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-flash-latest}
       FRONTEND_URL: http://localhost:3000
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-}
     ports:
       - "8080:8080"
     depends_on:
