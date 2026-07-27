@@ -125,34 +125,50 @@ public class PracticeServiceImpl implements PracticeService {
     attemptRepository.save(attempt);
   }
 
+  /**
+   * SM-2 spaced-repetition algorithm.
+   * - Correct answer: interval grows multiplicatively by the ease factor.
+   *   First correct: 1 day. Second correct: 3 days. Thereafter: interval * ease, capped at 180 days.
+   * - Incorrect answer: interval resets to 1 day, ease drops by 0.2 (minimum 1.3).
+   * - Ease increases by 0.1 per correct answer (maximum 3.0).
+   *
+   * Unlike the previous fixed-ladder implementation, ease is now actually used in interval
+   * scheduling, meaning well-known cards grow to longer intervals faster.
+   */
   private void updateCardState(AppUser user, Question question, AttemptRequest req) {
-    UserCardState state = userCardStateRepository.findByUser_IdAndQuestion_Id(user.getId(), question.getId()).orElse(null);
-    List<Integer> ladder = List.of(1, 3, 7, 14, 30);
+    UserCardState state = userCardStateRepository
+        .findByUser_IdAndQuestion_Id(user.getId(), question.getId())
+        .orElse(null);
+
     double ease = state == null ? 2.5d : state.getEase();
     int interval = state == null ? 0 : state.getIntervalDays();
+
     boolean got = "got".equals(req.selfRating()) || (req.aiScore() != null && req.aiScore() >= 70);
+
+    int nextInterval;
     if (got) {
-      ease = Math.min(3.0d, ease + 0.1d);
-      int nextInterval = 30;
-      for (Integer day : ladder) {
-        if (day > interval) {
-          nextInterval = day;
-          break;
-        }
+      if (interval == 0) {
+        nextInterval = 1;
+      } else if (interval == 1) {
+        nextInterval = 3;
+      } else {
+        nextInterval = (int) Math.round(interval * ease);
       }
-      interval = nextInterval;
+      nextInterval = Math.min(nextInterval, 180); // cap at 180 days
+      ease = Math.min(3.0d, ease + 0.1d);
     } else {
+      nextInterval = 1;
       ease = Math.max(1.3d, ease - 0.2d);
-      interval = 0;
     }
-    Instant due = Instant.now().plus(Duration.ofDays(interval));
+
+    Instant due = Instant.now().plus(Duration.ofDays(nextInterval));
     if (state == null) {
       state = new UserCardState(user, question);
     }
     state.setEase(ease);
-    state.setIntervalDays(interval);
+    state.setIntervalDays(nextInterval);
     state.setDueAt(due);
-    state.setTimesSeen((state.getTimesSeen()) + 1);
+    state.setTimesSeen(state.getTimesSeen() + 1);
     state.setTimesCorrect(state.getTimesCorrect() + (got ? 1 : 0));
     state.setLastResult(got ? "got" : "missed");
     userCardStateRepository.save(state);

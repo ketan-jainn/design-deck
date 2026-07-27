@@ -1,9 +1,10 @@
 package dev.designdeck.api.dto.practice;
 
+import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record AttemptRequest(
-    UUID questionId,
+    @NotNull UUID questionId,
     String selfRating,
     String userAnswer,
     Integer aiScore,
