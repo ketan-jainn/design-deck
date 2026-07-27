@@ -15,6 +15,16 @@ services:
       timeout: 5s
       retries: 10
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   api:
     build:
       context: ./apps/api
@@ -23,6 +33,7 @@ services:
       DATABASE_URL: jdbc:postgresql://db:5432/rapidsd
       DATABASE_USERNAME: rapidsd
       DATABASE_PASSWORD: rapidsd
+      REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production-use-a-long-random-secret}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-AQ.Ab8RN6LUgWzT0Few_-7sc5WNvZw41iG5g4MOFQTQpv9m8uvlaA}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-flash-latest}
@@ -36,6 +47,8 @@ services:
       - "8080:8080"
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   web:
