@@ -1,5 +1,8 @@
 package dev.designdeck.api.entity;
 
+import java.time.Instant;
+import java.util.UUID;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,8 +13,6 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import java.time.Instant;
-import java.util.UUID;
 
 @Entity
 @Table(name = "app_users")
@@ -62,7 +63,7 @@ public class AppUser {
     return email;
   }
 
-  public String getPasswordHash() {
+  public String agetPasswordHash() {
     return passwordHash;
   }
 

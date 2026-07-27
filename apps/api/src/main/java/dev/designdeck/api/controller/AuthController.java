@@ -46,7 +46,7 @@ public class AuthController {
   @PostMapping("/forgot-password")
   public Map<String, Boolean> forgot(@Valid @RequestBody ForgotRequest req) {
     auth.createResetToken(req.email());
-    return Map.of("ok", true);
+    return Map.of("ok password reset token created", true);
   }
 
   @PostMapping("/reset-password")
