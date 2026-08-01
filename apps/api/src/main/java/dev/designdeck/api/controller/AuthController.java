@@ -15,6 +15,7 @@ import dev.designdeck.api.dto.auth.ResetRequest;
 import dev.designdeck.api.dto.auth.SignupRequest;
 import dev.designdeck.api.security.JwtService;
 import dev.designdeck.api.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -39,8 +40,12 @@ public class AuthController {
   }
 
   @PostMapping("/logout")
-  public Map<String, Boolean> logout() {
-    return Map.of("ok", true);
+  public Map<String, Boolean> logout(HttpServletRequest request) {
+      String header = request.getHeader("Authorization");
+      if (header != null && header.startsWith("Bearer ")) {
+          jwt.invalidate(header.substring(7));
+      }
+      return Map.of("ok", true);
   }
 
   @PostMapping("/forgot-password")
