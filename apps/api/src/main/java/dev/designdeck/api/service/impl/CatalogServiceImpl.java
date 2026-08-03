@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.cache.annotation.Cacheable;
+
 import dev.designdeck.api.dto.catalog.CategoryDto;
 import dev.designdeck.api.dto.catalog.QuestionDto;
 import dev.designdeck.api.entity.Question;
@@ -32,11 +34,13 @@ public class CatalogServiceImpl implements CatalogService {
   }
 
   @Override
+  @Cacheable("categories")
   public List<CategoryDto> categories() {
     return categoryRepository.findAllByOrderBySortOrderAsc().stream().map(catalogMapper::toCategoryDto).toList();
   }
 
   @Override
+  @Cacheable(value = "questions", key = "#topic + ':' + #q")
   public List<QuestionDto> questions(String topic, String q) {
     String normalizedTopic = topic == null || topic.isBlank() ? null : topic;
     String search = q == null || q.isBlank() ? null : q;
@@ -48,6 +52,7 @@ public class CatalogServiceImpl implements CatalogService {
   }
 
   @Override
+  @Cacheable(value = "question", key = "#id")
   public QuestionDto question(UUID id) {
     return questionRepository
         .findDetailedById(id)
