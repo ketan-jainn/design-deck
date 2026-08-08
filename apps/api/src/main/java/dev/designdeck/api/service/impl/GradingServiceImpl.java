@@ -25,6 +25,8 @@ import dev.designdeck.api.dto.grading.GradeRequest;
 import dev.designdeck.api.exception.ApiException;
 import dev.designdeck.api.service.CatalogService;
 import dev.designdeck.api.service.GradingService;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 
 @Service
 public class GradingServiceImpl implements GradingService {
@@ -32,15 +34,18 @@ public class GradingServiceImpl implements GradingService {
   private final ObjectMapper mapper;
   private final String apiKey;
   private final String model;
+  private final MeterRegistry meterRegistry;
   private final HttpClient client = HttpClient.newHttpClient();
 
   public GradingServiceImpl(
       CatalogService catalogService,
       ObjectMapper mapper,
+      MeterRegistry meterRegistry,
       @Value("${designdeck.gemini-api-key}") String apiKey,
       @Value("${designdeck.gemini-model}") String model) {
     this.catalogService = catalogService;
     this.mapper = mapper;
+    this.meterRegistry = meterRegistry;
     this.apiKey = apiKey;
     this.model = model;
   }
@@ -76,6 +81,7 @@ public class GradingServiceImpl implements GradingService {
           "systemInstruction", Map.of("parts", List.of(Map.of("text", system))),
           "contents", List.of(Map.of("role", "user", "parts", List.of(Map.of("text", user)))),
           "generationConfig", Map.of("responseMimeType", "application/json")));
+      Timer.Sample sample = Timer.start(meterRegistry);
       HttpResponse<String> response = client
           .sendAsync(
               HttpRequest.newBuilder(URI.create(url))
@@ -85,6 +91,7 @@ public class GradingServiceImpl implements GradingService {
                   .build(),
               HttpResponse.BodyHandlers.ofString())
           .join();
+      sample.stop(meterRegistry.timer("grading.duration"));
       if (response.statusCode() >= 400) {
         throw new ApiException(HttpStatus.BAD_GATEWAY, "AI grading failed");
       }

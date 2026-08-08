@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -44,6 +45,7 @@ public class PracticeServiceImpl implements PracticeService {
   private final CatalogService catalogService;
   private final PracticeMapper practiceMapper;
   private final ObjectMapper mapper;
+  private final MeterRegistry meterRegistry;
 
   public PracticeServiceImpl(
       UserCardStateRepository userCardStateRepository,
@@ -53,7 +55,8 @@ public class PracticeServiceImpl implements PracticeService {
       AppUserRepository appUserRepository,
       CatalogService catalogService,
       PracticeMapper practiceMapper,
-      ObjectMapper mapper) {
+      ObjectMapper mapper,
+      MeterRegistry meterRegistry) {
     this.userCardStateRepository = userCardStateRepository;
     this.questionRepository = questionRepository;
     this.attemptRepository = attemptRepository;
@@ -62,6 +65,7 @@ public class PracticeServiceImpl implements PracticeService {
     this.catalogService = catalogService;
     this.practiceMapper = practiceMapper;
     this.mapper = mapper;
+    this.meterRegistry = meterRegistry;
   }
 
   @Override
@@ -84,6 +88,9 @@ public class PracticeServiceImpl implements PracticeService {
     saveAttempt(user, question, req);
     updateCardState(user, question, req);
     updateStreak(userId);
+    meterRegistry.counter("attempts.submitted", "result",
+        (req.selfRating() != null ? req.selfRating() : (req.aiScore() != null && req.aiScore() >= 70 ? "got" : "missed")))
+        .increment();
   }
 
   @Override
