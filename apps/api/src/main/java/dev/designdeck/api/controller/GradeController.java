@@ -10,12 +10,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.time.Duration;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/grade")
+@Tag(name = "Grading", description = "Endpoints for AI grading of system design answers")
 public class GradeController {
 
   private static final int GRADE_LIMIT = 10;
@@ -30,6 +33,7 @@ public class GradeController {
   }
 
   @PostMapping
+  @Operation(summary = "Submit an answer for grading", description = "Submits a user answer for AI grading. Returns a Job ID for async streaming. Rate limited.")
   public ResponseEntity<GradingJobDto> submitJob(@Valid @RequestBody GradeRequest req) {
     UUID userId = SecurityUtils.currentUserId();
     if (!rateLimiter.tryConsume(userId, "grade", GRADE_LIMIT, GRADE_WINDOW)) {
@@ -40,6 +44,7 @@ public class GradeController {
   }
 
   @GetMapping("/{jobId}/stream")
+  @Operation(summary = "Stream grading results", description = "Streams the result of a grading job via Server-Sent Events (SSE).")
   public SseEmitter streamJob(@PathVariable UUID jobId) {
     return grading.streamJob(SecurityUtils.currentUserId(), jobId);
   }
