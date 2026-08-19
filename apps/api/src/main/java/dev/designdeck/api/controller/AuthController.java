@@ -17,9 +17,12 @@ import dev.designdeck.api.security.JwtService;
 import dev.designdeck.api.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Authentication", description = "Endpoints for user registration and login")
 public class AuthController {
   private final JwtService jwt;
   private final AuthService auth;
@@ -30,16 +33,19 @@ public class AuthController {
   }
 
   @PostMapping("/signup")
+  @Operation(summary = "Register a new user", description = "Creates a new user account and returns authentication tokens.")
   public AuthResponse signup(@Valid @RequestBody SignupRequest req) {
     return auth.signup(req, token -> jwt.issue(token, Duration.ofMinutes(15)), token -> jwt.issue(token, Duration.ofDays(30)));
   }
 
   @PostMapping("/login")
+  @Operation(summary = "Login user", description = "Authenticates a user and returns authentication tokens.")
   public AuthResponse login(@Valid @RequestBody LoginRequest req) {
     return auth.login(req, token -> jwt.issue(token, Duration.ofMinutes(15)), token -> jwt.issue(token, Duration.ofDays(30)));
   }
 
   @PostMapping("/logout")
+  @Operation(summary = "Logout user", description = "Invalidates the current access token.")
   public Map<String, Boolean> logout(HttpServletRequest request) {
       String header = request.getHeader("Authorization");
       if (header != null && header.startsWith("Bearer ")) {
