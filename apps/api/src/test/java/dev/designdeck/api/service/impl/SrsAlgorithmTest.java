@@ -29,6 +29,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -53,6 +54,8 @@ class SrsAlgorithmTest {
     private AppUser user;
     private Question question;
     private Profile profile;
+    private UUID userId;
+    private UUID questionId;
 
     @BeforeEach
     void setUp() {
@@ -61,34 +64,36 @@ class SrsAlgorithmTest {
                 profileRepository, appUserRepository, catalogService,
                 practiceMapper, mapper, meterRegistry);
 
-        user = new AppUser();
-        user.setId(UUID.randomUUID());
+        userId = UUID.randomUUID();
+        questionId = UUID.randomUUID();
 
-        question = new Question();
-        question.setId(UUID.randomUUID());
+        user = mock(AppUser.class);
+        when(user.getId()).thenReturn(userId);
 
-        profile = new Profile();
-        profile.setId(user.getId());
+        question = mock(Question.class);
+        when(question.getId()).thenReturn(questionId);
+
+        profile = new Profile(user, "Test");
         profile.setStreakCount(0);
         profile.setLastActiveDate(LocalDate.now().minusDays(2));
 
-        when(appUserRepository.findById(user.getId())).thenReturn(Optional.of(user));
-        when(questionRepository.findById(question.getId())).thenReturn(Optional.of(question));
-        when(profileRepository.findById(user.getId())).thenReturn(Optional.of(profile));
+        when(appUserRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(questionRepository.findById(questionId)).thenReturn(Optional.of(question));
+        when(profileRepository.findById(userId)).thenReturn(Optional.of(profile));
         when(meterRegistry.counter(anyString(), anyString(), anyString())).thenReturn(counter);
     }
 
     @Test
     void correctAnswer_firstTime_intervalBecomesOne() {
-        when(userCardStateRepository.findByUser_IdAndQuestion_Id(user.getId(), question.getId()))
+        when(userCardStateRepository.findByUser_IdAndQuestion_Id(userId, questionId))
                 .thenReturn(Optional.empty());
 
-        AttemptRequest request = new AttemptRequest(question.getId(), "got", null, "answer", null);
-        practiceService.submit(user.getId(), request);
+        AttemptRequest request = new AttemptRequest(questionId, "got", "answer", null, null);
+        practiceService.submit(userId, request);
 
         verify(userCardStateRepository).save(stateCaptor.capture());
         UserCardState state = stateCaptor.getValue();
-        
+
         assertThat(state.getIntervalDays()).isEqualTo(1);
         assertThat(state.getEase()).isEqualTo(2.6);
         assertThat(state.getTimesSeen()).isEqualTo(1);
@@ -103,11 +108,11 @@ class SrsAlgorithmTest {
         existingState.setTimesSeen(3);
         existingState.setTimesCorrect(3);
 
-        when(userCardStateRepository.findByUser_IdAndQuestion_Id(user.getId(), question.getId()))
+        when(userCardStateRepository.findByUser_IdAndQuestion_Id(userId, questionId))
                 .thenReturn(Optional.of(existingState));
 
-        AttemptRequest request = new AttemptRequest(question.getId(), "got", null, "answer", null);
-        practiceService.submit(user.getId(), request);
+        AttemptRequest request = new AttemptRequest(questionId, "got", "answer", null, null);
+        practiceService.submit(userId, request);
 
         verify(userCardStateRepository).save(stateCaptor.capture());
         UserCardState state = stateCaptor.getValue();
@@ -122,11 +127,11 @@ class SrsAlgorithmTest {
         existingState.setIntervalDays(10);
         existingState.setEase(2.5);
 
-        when(userCardStateRepository.findByUser_IdAndQuestion_Id(user.getId(), question.getId()))
+        when(userCardStateRepository.findByUser_IdAndQuestion_Id(userId, questionId))
                 .thenReturn(Optional.of(existingState));
 
-        AttemptRequest request = new AttemptRequest(question.getId(), "missed", null, "answer", null);
-        practiceService.submit(user.getId(), request);
+        AttemptRequest request = new AttemptRequest(questionId, "missed", "answer", null, null);
+        practiceService.submit(userId, request);
 
         verify(userCardStateRepository).save(stateCaptor.capture());
         UserCardState state = stateCaptor.getValue();

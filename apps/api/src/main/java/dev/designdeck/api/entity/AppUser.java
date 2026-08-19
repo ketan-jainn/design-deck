@@ -63,7 +63,7 @@ public class AppUser {
     return email;
   }
 
-  public String agetPasswordHash() {
+  public String getPasswordHash() {
     return passwordHash;
   }
 

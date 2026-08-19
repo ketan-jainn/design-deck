@@ -3,6 +3,7 @@ package dev.designdeck.api.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.designdeck.api.dto.auth.AuthResponse;
 import dev.designdeck.api.dto.auth.SignupRequest;
+import dev.designdeck.api.dto.profile.ProfileDto;
 import dev.designdeck.api.security.JwtService;
 import dev.designdeck.api.service.AuthService;
 import dev.designdeck.api.repository.AppUserRepository;
@@ -42,7 +43,8 @@ class AuthControllerTest {
     void signup_validRequest_returnsOk() throws Exception {
         SignupRequest request = new SignupRequest("test@example.com", "Password123!", "Test User");
 
-        AuthResponse authResponse = new AuthResponse("access", "refresh");
+        AuthResponse authResponse = new AuthResponse(
+            "access", "refresh", new ProfileDto("test@example.com", "Test User", 10, 0));
         Mockito.when(authService.signup(any(), any(), any())).thenReturn(authResponse);
 
         mockMvc.perform(post("/api/auth/signup")

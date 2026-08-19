@@ -3,6 +3,7 @@ package dev.designdeck.api.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.designdeck.api.dto.grading.GradeRequest;
 import dev.designdeck.api.dto.grading.GradingJobDto;
+import dev.designdeck.api.entity.GradingJob;
 import dev.designdeck.api.security.JwtService;
 import dev.designdeck.api.service.GradingService;
 import dev.designdeck.api.service.RateLimiterService;
@@ -19,6 +20,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Instant;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -76,13 +78,14 @@ class GradeControllerTest {
     @Test
     void submitGrade_validRequest_returnsAccepted() throws Exception {
         Mockito.when(rateLimiterService.tryConsume(any(), anyString(), anyInt(), any())).thenReturn(true);
-        Mockito.when(gradingService.submitJob(any(), any())).thenReturn(new GradingJobDto(UUID.randomUUID(), testUserId, "question", "answer", "status", null, null));
+        Mockito.when(gradingService.submitJob(any(), any())).thenReturn(
+            new GradingJobDto(UUID.randomUUID(), GradingJob.Status.PENDING, null, Instant.now()));
 
-        String requestJson = "{\"answer\":\"some answer\", \"questionId\": \"1\"}";
+        GradeRequest request = new GradeRequest(UUID.randomUUID(), "some answer");
 
         mockMvc.perform(post("/api/grade")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson))
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isAccepted());
     }
 }

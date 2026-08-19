@@ -32,10 +32,32 @@ public class Favorite {
 
   protected Favorite() {}
 
+  public Favorite(AppUser user, Question question) {
+    this.user = user;
+    this.question = question;
+    this.id = new FavoriteId(user.getId(), question.getId());
+  }
+
   @PrePersist
   void onCreate() {
     if (createdAt == null) {
       createdAt = Instant.now();
     }
+  }
+
+  public FavoriteId getId() {
+    return id;
+  }
+
+  public AppUser getUser() {
+    return user;
+  }
+
+  public Question getQuestion() {
+    return question;
+  }
+
+  public Instant getCreatedAt() {
+    return createdAt;
   }
 }
