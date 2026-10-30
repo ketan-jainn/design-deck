@@ -22,9 +22,9 @@ jobs:
           --health-retries 5
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Set up JDK 21
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v5
       with:
         java-version: '21'
         distribution: 'temurin'
@@ -33,3 +33,5 @@ jobs:
       run: mvn -B package --file apps/api/pom.xml
       env:
         REDIS_URL: redis://localhost:6379
+        BAZAARLINK_API_KEY: ${{ secrets.BAZAARLINK_API_KEY }}
+        BAZAARLINK_MODEL: qwen/qwen3.7-flash:free

@@ -71,7 +71,7 @@ class GradeControllerTest {
 
         mockMvc.perform(post("/api/grade")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"))
+                .content(objectMapper.writeValueAsString(new GradeRequest(UUID.randomUUID(), "some answer"))))
                 .andExpect(status().isTooManyRequests());
     }
 
