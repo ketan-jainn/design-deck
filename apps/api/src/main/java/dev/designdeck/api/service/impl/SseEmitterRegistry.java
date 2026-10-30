@@ -35,7 +35,7 @@ public class SseEmitterRegistry {
     if (emitter != null) {
       try {
         emitter.send(SseEmitter.event().name("error").data(Map.of("message", errorMessage)));
-        emitter.completeWithError(new RuntimeException(errorMessage));
+        emitter.complete();
       } catch (Exception e) {
         // Ignored
       }

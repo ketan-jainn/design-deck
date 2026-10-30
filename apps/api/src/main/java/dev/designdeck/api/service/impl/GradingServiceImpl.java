@@ -79,7 +79,7 @@ public class GradingServiceImpl implements GradingService {
       SseEmitter emitter = new SseEmitter();
       try {
         emitter.send(SseEmitter.event().name("error").data(Map.of("message", job.getErrorMessage())));
-        emitter.completeWithError(new RuntimeException(job.getErrorMessage()));
+        emitter.complete();
       } catch (Exception e) {
         emitter.completeWithError(e);
       }

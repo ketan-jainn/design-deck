@@ -15,7 +15,11 @@ async function request<T>(path: string, method: Method = "GET", body?: unknown):
     headers: body ? { "content-type": "application/json" } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
-  if ((res.status === 401 || res.status === 403) && typeof window !== "undefined" && !location.pathname.startsWith("/auth")) {
+  if (
+    (res.status === 401 || res.status === 403) &&
+    typeof window !== "undefined" &&
+    !location.pathname.startsWith("/auth")
+  ) {
     location.replace("/auth");
   }
   if (!res.ok) {
@@ -56,5 +60,30 @@ export const api = {
     aiFeedback?: Grade;
   }) => request<{ ok: true }>("/api/attempts", "POST", data),
   progress: () => request<ProgressSummary>("/api/progress/summary"),
-  grade: (data: { questionId: string; userAnswer: string }) => request<Grade>("/api/grade", "POST", data),
+  grade: async (data: { questionId: string; userAnswer: string }): Promise<Grade> => {
+    const job = await request<{ jobId: string }>("/api/grade", "POST", data);
+    const res = await fetch(`/api/grade/${job.jobId}/stream`, {
+      credentials: "same-origin",
+      cache: "no-store",
+    });
+    const stream = await res.text();
+    if (!res.ok) throw new Error(stream || `Request failed (${res.status})`);
+
+    const event = stream
+      .split(/\r?\n\r?\n/)
+      .find((block) => /^event:[ \t]*(complete|error)[ \t]*$/m.test(block));
+    if (!event) throw new Error("AI grading ended without a result. Please try again.");
+
+    const eventName = event.match(/^event:[ \t]*(complete|error)[ \t]*$/m)?.[1];
+    const payload = event
+      .split(/\r?\n/)
+      .filter((line) => /^data:/.test(line))
+      .map((line) => line.replace(/^data:\s?/, ""))
+      .join("\n");
+    const result = JSON.parse(payload) as Grade | { message?: string };
+    if (eventName === "error") {
+      throw new Error("message" in result && result.message ? result.message : "AI grading failed");
+    }
+    return result as Grade;
+  },
 };

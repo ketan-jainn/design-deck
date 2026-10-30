@@ -33,8 +33,8 @@ DATABASE_URL=jdbc:postgresql://localhost:5432/designdeck
 DATABASE_USERNAME=designdeck
 DATABASE_PASSWORD=designdeck
 JWT_SECRET=replace-with-a-long-random-secret
-GEMINI_API_KEY=your-key-from-aistudio
-GEMINI_MODEL=gemini-flash-latest
+BAZAARLINK_API_KEY=your-bazaarlink-api-key
+BAZAARLINK_MODEL=qwen/qwen3.7-flash:free
 FRONTEND_URL=http://localhost:3000
 API_BASE_URL=http://localhost:8080
 ```

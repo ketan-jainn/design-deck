@@ -20,10 +20,17 @@ public interface UserCardStateRepository extends JpaRepository<UserCardState, Us
   Optional<UserCardState> findByUser_IdAndQuestion_Id(UUID userId, UUID questionId);
 
   @Query("""
-      select coalesce(sum(s.timesSeen), 0), coalesce(sum(s.timesCorrect), 0)
+      select coalesce(sum(s.timesSeen), 0) as seen,
+             coalesce(sum(s.timesCorrect), 0) as correct
       from UserCardState s where s.user.id = :userId
       """)
-  Object[] sumTotals(@Param("userId") UUID userId);
+  TotalsProjection sumTotals(@Param("userId") UUID userId);
+
+  interface TotalsProjection {
+    Long getSeen();
+
+    Long getCorrect();
+  }
 
   @Query("""
       select count(s) from UserCardState s

@@ -126,8 +126,8 @@ Base URL: `/api` (proxied by Next.js BFF)
 | `DATABASE_USERNAME` | API | `designdeck` |
 | `DATABASE_PASSWORD` | API | `designdeck` |
 | `JWT_SECRET` | API | dev placeholder in application.yml |
-| `GEMINI_API_KEY` | API | empty |
-| `GEMINI_MODEL` | API | `gemini-2.0-flash` |
+| `BAZAARLINK_API_KEY` | API | empty |
+| `BAZAARLINK_MODEL` | API | `qwen/qwen3.7-flash:free` |
 | `FRONTEND_URL` | API | `http://localhost:3000` |
 | `API_BASE_URL` | Web (server proxy) | `http://localhost:8080` |
 
@@ -179,7 +179,7 @@ After backend or frontend changes:
 
 1. Signup → lands on `/home`
 2. Browse categories and search questions
-3. Start session → submit attempt → AI grade (requires `GEMINI_API_KEY`)
+3. Start session → submit attempt → AI grade (requires `BAZAARLINK_API_KEY`)
 4. Progress dashboard loads stats
 5. Settings: update profile, logout works
 

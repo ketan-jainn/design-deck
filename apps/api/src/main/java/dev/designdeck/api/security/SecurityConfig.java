@@ -1,5 +1,6 @@
 package dev.designdeck.api.security;
 
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +18,7 @@ public class SecurityConfig {
     return http.csrf(csrf -> csrf.disable())
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
+            .dispatcherTypeMatchers(DispatcherType.ASYNC, DispatcherType.ERROR).permitAll()
             .requestMatchers("/api/auth/**", "/api/categories", "/api/questions/**").permitAll()
             .anyRequest().authenticated())
         .exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, authException) ->

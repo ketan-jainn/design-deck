@@ -51,8 +51,8 @@ spring:
 designdeck:
   jwt-secret: ${JWT_SECRET:dev-only-change-this-secret-dev-only-change-this-secret}
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
-  gemini-api-key: ${GEMINI_API_KEY:'YOUR_GEMINI_API_KEY'}
-  gemini-model: ${GEMINI_MODEL:gemini-flash-latest}
+  bazaarlink-api-key: ${BAZAARLINK_API_KEY:}
+  bazaarlink-model: ${BAZAARLINK_MODEL:qwen/qwen3.7-flash:free}
   resend-api-key: ${RESEND_API_KEY:}
   mail:
     from: ${MAIL_FROM:}

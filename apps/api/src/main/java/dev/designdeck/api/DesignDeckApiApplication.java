@@ -1,6 +1,5 @@
 package dev.designdeck.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -19,8 +18,4 @@ public class DesignDeckApiApplication {
     return new BCryptPasswordEncoder();
   }
 
-  @Bean
-  ObjectMapper objectMapper() {
-    return new ObjectMapper();
-  }
 }

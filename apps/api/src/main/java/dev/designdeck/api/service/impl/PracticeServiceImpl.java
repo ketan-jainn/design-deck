@@ -99,9 +99,9 @@ public class PracticeServiceImpl implements PracticeService {
     Profile profile = profileRepository
         .findById(userId)
         .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Profile not found"));
-    Object[] totals = userCardStateRepository.sumTotals(userId);
-    int seen = ((Number) totals[0]).intValue();
-    int correct = ((Number) totals[1]).intValue();
+    UserCardStateRepository.TotalsProjection totals = userCardStateRepository.sumTotals(userId);
+    int seen = totals.getSeen().intValue();
+    int correct = totals.getCorrect().intValue();
     int today = (int) attemptRepository.countTodayAttempts(userId);
     int due = (int) userCardStateRepository.countDue(userId);
     List<TopicMasteryDto> topics = userCardStateRepository.topicMastery(userId).stream()
