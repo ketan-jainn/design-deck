@@ -1,6 +1,6 @@
 {
-  "name": "RapidSD — SDE-2 System Design Rapid-Fire",
-  "short_name": "RapidSD",
+  "name": "Design Deck — SDE-2 System Design Rapid-Fire",
+  "short_name": "Design Deck",
   "description": "Rapid-fire flashcards for SDE-2 system design interviews.",
   "start_url": "/",
   "scope": "/",

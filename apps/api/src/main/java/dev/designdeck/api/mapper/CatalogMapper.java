@@ -1,16 +1,17 @@
 package dev.designdeck.api.mapper;
 
+import java.util.Arrays;
+import java.util.List;
+
+import org.springframework.stereotype.Component;
+
 import dev.designdeck.api.dto.catalog.AnswerKeyDto;
 import dev.designdeck.api.dto.catalog.CategoryDto;
-import dev.designdeck.api.dto.catalog.QuestionCategoryDto;
 import dev.designdeck.api.dto.catalog.QuestionCategoryDto;
 import dev.designdeck.api.dto.catalog.QuestionDto;
 import dev.designdeck.api.entity.AnswerKey;
 import dev.designdeck.api.entity.Category;
 import dev.designdeck.api.entity.Question;
-import java.util.Arrays;
-import java.util.List;
-import org.springframework.stereotype.Component;
 
 @Component
 public class CatalogMapper {

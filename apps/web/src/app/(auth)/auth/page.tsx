@@ -50,7 +50,7 @@ export default function AuthPage() {
           <div className="grid h-14 w-14 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
             <Zap className="h-7 w-7" strokeWidth={2.5} />
           </div>
-          <h1 className="text-2xl font-black tracking-tight">RapidSD</h1>
+          <h1 className="text-2xl font-black tracking-tight">Design Deck</h1>
           <p className="text-sm text-muted-foreground">SDE-2 system design rapid-fire.</p>
         </div>
         <Tabs defaultValue="signin" className="w-full">

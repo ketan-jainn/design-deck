@@ -1,16 +1,18 @@
+name: designdeck
+
 services:
   db:
     image: postgres:15-alpine
     environment:
-      POSTGRES_DB: rapidsd
-      POSTGRES_USER: rapidsd
-      POSTGRES_PASSWORD: rapidsd
+      POSTGRES_DB: designdeck
+      POSTGRES_USER: designdeck
+      POSTGRES_PASSWORD: designdeck
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U rapidsd -d rapidsd"]
+      test: ["CMD-SHELL", "pg_isready -U designdeck -d designdeck"]
       interval: 5s
       timeout: 5s
       retries: 10

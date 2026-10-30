@@ -23,7 +23,7 @@ export function AppNavigation() {
             <Zap className="h-8 w-8 fill-primary/15" strokeWidth={2.5} />
             <Flame className="absolute -right-0.5 bottom-0 h-4 w-4 fill-warning/20 text-warning" />
           </span>
-          <span className="text-sm font-black tracking-tight">RapidSD</span>
+          <span className="text-sm font-black leading-tight tracking-tight">Design Deck</span>
         </Link>
 
         <nav className="flex-1 px-3 py-5" aria-label="Primary navigation">

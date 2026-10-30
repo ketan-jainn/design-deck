@@ -1,5 +1,5 @@
 {
-  "name": "@rapidsd/web",
+  "name": "@designdeck/web",
   "private": true,
   "type": "module",
   "scripts": {

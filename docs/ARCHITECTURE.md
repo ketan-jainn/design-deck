@@ -1,6 +1,6 @@
-# RapidSD Architecture
+# Design Deck Architecture
 
-RapidSD is a system-design practice application organized as a lightweight monorepo.
+Design Deck is a system-design practice application organized as a lightweight monorepo.
 
 ## System overview
 
@@ -45,9 +45,9 @@ exception/      ApiException + @RestControllerAdvice handler
 
 - Browser calls relative `/api/*` routes on the Next.js server.
 - `apps/web/src/app/api/[...path]/route.ts` proxies to Spring Boot.
-- `server-api.ts` attaches JWT from httpOnly cookie `rsd_access`.
+- `server-api.ts` attaches JWT from httpOnly cookie `designdeck_access`.
 - Login/signup responses set cookies from `accessToken` / `refreshToken` fields.
-- `middleware.ts` guards authenticated routes by checking `rsd_access`.
+- `middleware.ts` guards authenticated routes by checking `designdeck_access`.
 
 ## Database
 
@@ -78,6 +78,5 @@ Open http://localhost:3000
 
 | Context | Name |
 |---------|------|
-| Repo folder | `systemflash` |
-| npm package | `rapidsd` |
+| npm package | `designdeck` |
 | Java package | `dev.designdeck.api` |

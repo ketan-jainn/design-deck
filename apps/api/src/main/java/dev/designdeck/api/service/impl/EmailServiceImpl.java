@@ -29,10 +29,10 @@ public class EmailServiceImpl implements EmailService {
 
   public EmailServiceImpl(
       @Value("${designdeck.resend-api-key:}") String resendApiKey,
-      @Value("${designdeck.mail.from:noreply@rapidsd.dev}") String fromAddress,
+      @Value("${designdeck.mail.from:noreply@designdeck.dev}") String fromAddress,
       ObjectMapper mapper) {
     this.resendApiKey = resendApiKey;
-    this.fromAddress = fromAddress;
+    this.fromAddress = StringUtils.hasText(fromAddress) ? fromAddress : "noreply@designdeck.dev";
     this.mapper = mapper;
     this.httpClient = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(5))
@@ -49,7 +49,7 @@ public class EmailServiceImpl implements EmailService {
       Map<String, Object> payload = Map.of(
           "from", fromAddress,
           "to", List.of(to),
-          "subject", "Reset your RapidSD password",
+          "subject", "Reset your Design Deck password",
           "text", buildResetEmailBody(resetLink)
       );
       String body = mapper.writeValueAsString(payload);
@@ -79,7 +79,7 @@ public class EmailServiceImpl implements EmailService {
 
   private String buildResetEmailBody(String resetLink) {
     return """
-        You requested a password reset for your RapidSD account.
+        You requested a password reset for your Design Deck account.
 
         Reset your password using this link:
         %s

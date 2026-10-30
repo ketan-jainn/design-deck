@@ -9,9 +9,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootApplication
 @SuppressWarnings("unused")
-public class RapidSdApiApplication {
+public class DesignDeckApiApplication {
   public static void main(String[] args) {
-    SpringApplication.run(RapidSdApiApplication.class, args);
+    SpringApplication.run(DesignDeckApiApplication.class, args);
   }
 
   @Bean

@@ -4,7 +4,7 @@ const PRIVATE_PREFIXES = ["/home", "/session", "/browse", "/progress", "/setting
 
 export function middleware(req: NextRequest) {
   const isPrivate = PRIVATE_PREFIXES.some((path) => req.nextUrl.pathname.startsWith(path));
-  if (isPrivate && !req.cookies.has("rsd_access")) {
+  if (isPrivate && !req.cookies.has("designdeck_access")) {
     return NextResponse.redirect(new URL("/auth", req.url));
   }
   return NextResponse.next();

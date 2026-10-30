@@ -3,7 +3,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "RapidSD",
+  title: "Design Deck",
   description: "SDE-2 system design rapid-fire practice.",
   manifest: "/manifest.webmanifest",
 };

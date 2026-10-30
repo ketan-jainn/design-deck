@@ -54,7 +54,7 @@ export default function SettingsPage() {
                 <UserRound className="h-6 w-6" />
               </div>
               <div className="min-w-0">
-                <p className="truncate font-bold">{data?.displayName || "RapidSD learner"}</p>
+                <p className="truncate font-bold">{data?.displayName || "Design Deck learner"}</p>
                 <p className="text-xs text-muted-foreground">Your account</p>
               </div>
             </div>
@@ -70,7 +70,7 @@ export default function SettingsPage() {
             <Button variant="outline" className="mt-5 w-full" onClick={signOut}>
               <LogOut className="mr-2 h-4 w-4" /> Sign out
             </Button>
-            <p className="mt-4 text-center text-[10px] font-medium uppercase tracking-widest text-muted-foreground/60">RapidSD v1</p>
+            <p className="mt-4 text-center text-[10px] font-medium uppercase tracking-widest text-muted-foreground/60">Design Deck v1</p>
           </CardContent>
         </Card>
 

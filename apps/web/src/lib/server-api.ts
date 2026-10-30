@@ -2,8 +2,8 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 const API_BASE_URL = process.env.API_BASE_URL ?? "http://localhost:8080";
-const ACCESS = "rsd_access";
-const REFRESH = "rsd_refresh";
+const ACCESS = "designdeck_access";
+const REFRESH = "designdeck_refresh";
 
 export async function proxy(req: NextRequest, upstreamPath: string) {
   const body = req.method === "GET" ? undefined : await req.text();

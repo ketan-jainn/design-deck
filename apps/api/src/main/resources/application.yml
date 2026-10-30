@@ -15,7 +15,7 @@ management:
 
 info:
   app:
-    name: RapidSD API
+    name: Design Deck API
     description: System design practice platform
 
 logging:
@@ -24,9 +24,9 @@ logging:
 
 spring:
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/rapidsd}
-    username: ${DATABASE_USERNAME:rapidsd}
-    password: ${DATABASE_PASSWORD:rapidsd}
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/designdeck}
+    username: ${DATABASE_USERNAME:designdeck}
+    password: ${DATABASE_PASSWORD:designdeck}
   data:
     redis:
       url: ${REDIS_URL:redis://localhost:6379}

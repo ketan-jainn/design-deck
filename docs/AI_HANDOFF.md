@@ -1,10 +1,10 @@
-# AI Handoff — RapidSD
+# AI Handoff — Design Deck
 
 Give this document to any AI agent before making changes. It describes the project structure, conventions, API contract, and current refactor status so work can start without re-exploring the codebase.
 
 ## Project purpose
 
-RapidSD is a rapid-fire system design practice app. Users browse questions by topic, run spaced-repetition practice sessions, get AI grading, and track progress.
+Design Deck is a rapid-fire system design practice app. Users browse questions by topic, run spaced-repetition practice sessions, get AI grading, and track progress.
 
 ## Quick start commands
 
@@ -28,7 +28,7 @@ npm run build:api
 ```
 apps/
   api/src/main/java/dev/designdeck/api/
-    RapidSdApiApplication.java    # Entry point, PasswordEncoder + ObjectMapper beans
+    DesignDeckApiApplication.java    # Entry point, PasswordEncoder + ObjectMapper beans
     controller/                     # One controller per REST resource
     service/                        # Service interfaces
     service/impl/                   # Service implementations (@Service)
@@ -122,9 +122,9 @@ Base URL: `/api` (proxied by Next.js BFF)
 
 | Variable | Used by | Default |
 |----------|---------|---------|
-| `DATABASE_URL` | API | `jdbc:postgresql://localhost:5432/rapidsd` |
-| `DATABASE_USERNAME` | API | `rapidsd` |
-| `DATABASE_PASSWORD` | API | `rapidsd` |
+| `DATABASE_URL` | API | `jdbc:postgresql://localhost:5432/designdeck` |
+| `DATABASE_USERNAME` | API | `designdeck` |
+| `DATABASE_PASSWORD` | API | `designdeck` |
 | `JWT_SECRET` | API | dev placeholder in application.yml |
 | `GEMINI_API_KEY` | API | empty |
 | `GEMINI_MODEL` | API | `gemini-2.0-flash` |
@@ -138,7 +138,7 @@ In Docker Compose, web uses `API_BASE_URL=http://api:8080`.
 - Stateless JWT auth via `JwtFilter`.
 - Public paths: `/api/auth/**`, `/api/categories`, `/api/questions/**`.
 - All other `/api/*` requires valid JWT in `Authorization: Bearer` header.
-- Next.js BFF stores tokens in httpOnly cookies (`rsd_access`, `rsd_refresh`).
+- Next.js BFF stores tokens in httpOnly cookies (`designdeck_access`, `designdeck_refresh`).
 
 ## Frontend integration points
 
