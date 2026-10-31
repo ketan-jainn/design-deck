@@ -97,7 +97,7 @@ The API runs Flyway on startup and seeds the Design Deck question catalog.
 
 ## Deploy the frontend to Vercel
 
-Terraform creates the Vercel project; GitHub Actions builds and deploys it when
+Terraform in `terraform/vercel` manages the Vercel project; GitHub Actions builds and deploys it when
 commits are pushed to `main`. This does not use Vercel's GitHub integration app
 and does not deploy pull requests or other branches.
 
@@ -112,14 +112,14 @@ Vercel may pause service when the free allowance is exhausted.
    its General settings. Add `VERCEL_API_TOKEN` and `TF_VAR_vercel_team_id` to
    the root `.env` file using `.env.example` as a guide. Do not commit `.env`
    or put the token in a `.tf` file. Run `npm install` if needed.
-2. From the repository root, run `npm run tf -- init`, then
-   `npm run tf -- plan -out=production.tfplan`. Review the plan and run
-   `npm run tf -- apply production.tfplan` to create the project. The `tf`
+2. From the repository root, run `npm run tf:vercel -- init`, then
+   `npm run tf:vercel -- plan -out=production.tfplan`. Review the plan and run
+   `npm run tf:vercel -- apply production.tfplan` to create the project. The `tf:vercel`
    script loads `.env` before starting Terraform; already-set shell environment
-   variables take precedence. A plan only
-   previews changes; it does not create the project. Keep the Terraform state
-   private and backed up. Do not commit state or saved plans.
-3. Run `npm run tf -- output` and add these GitHub repository Actions secrets:
+   variables take precedence. `npm run tf -- ...` remains an alias for Vercel.
+   A plan only previews changes; it does not create the project. Keep the
+   Terraform state private and backed up. Do not commit state or saved plans.
+3. Run `npm run tf:vercel -- output` and add these GitHub repository Actions secrets:
    `VERCEL_PROJECT_ID` from `vercel_project_id`, `VERCEL_ORG_ID` from
    `vercel_team_id`, and `VERCEL_TOKEN` containing a Vercel API token with
    access to that team and project. The local `.env` is not uploaded to GitHub
@@ -144,3 +144,97 @@ If a project with this name already exists in the selected Vercel team, import
 it into Terraform state instead of attempting to create a duplicate. Check that
 the existing project is not connected to Vercel's GitHub integration; disconnect
 that integration if it would otherwise create deployments for other branches.
+
+If upgrading an older checkout that stored Vercel state at
+`terraform/terraform.tfstate`, back it up privately and move it to
+`terraform/vercel/terraform.tfstate` before using the new commands. Do not
+overwrite a state file already present in the destination. Initialize the new
+directory and review a fresh plan. Saved plans from the old directory must not
+be reused.
+
+## Manage the existing Neon project with Terraform
+
+The Neon configuration in `terraform/neon` has its own local state, separate
+from Vercel. It uses the community-maintained `kislerdm/neon` provider and
+imports an existing project; it does not migrate Docker data or run Flyway.
+Neon supplies both direct and pooled connection endpoints for the same project.
+The configuration sets the Neon Free history window to six hours (21,600
+seconds); review the plan if the existing project's window is different.
+
+1. In Neon, select the existing project and copy its project ID. Create a Neon
+   **management API key** with access to the project; database credentials and
+   object-storage keys are not Neon management API keys.
+2. In the root `.env`, set `NEON_API_KEY` and `TF_VAR_neon_project_id` (see
+   `.env.example`). Keep these values private. The `tf:neon` command loads this
+   file; variables already set in the shell take precedence.
+3. From the repository root, run `npm run tf:neon -- init`, then
+   `npm run tf:neon -- plan -out=neon-import.tfplan`. Review the full plan:
+   it should import the existing project, with no unexpected updates,
+   replacements, or deletions. If it proposes unexpected changes, stop and
+   investigate rather than applying.
+4. When the plan is correct, run `npm run tf:neon -- apply neon-import.tfplan`
+   to record the import. `npm run tf:neon -- plan` should then show no changes.
+   Terraform blocks destruction of this managed project with `prevent_destroy`.
+   An apply can import a resource into state before a later update fails. If an
+   apply fails, check `npm run tf:neon -- state list`, correct the issue, and
+   create a fresh plan; don't apply the old saved plan again.
+
+The provider can write database credentials into Terraform state, even when
+they are marked sensitive. Keep `terraform/neon/terraform.tfstate`, saved plan
+files, and backups private and out of Git. Store a secure backup of the state;
+for shared or automated use, configure an encrypted, access-controlled remote
+backend with locking before collaborating. The provider lock file should be
+committed. Continue configuring pooled `DATABASE_URL` and direct
+`SPRING_FLYWAY_URL` on the API separately, and manage schema changes with Flyway.
+
+## Deploy the backend to Render
+
+`terraform/render` manages a free Render web service separately from Neon and
+Vercel. Render builds `apps/api/Dockerfile` from `main`; GitHub Actions triggers
+later deployments through the Render API. Render automatic deployment is
+disabled. The workflow runs only on pushes to `main` and requests the pushed
+commit. It reports that Render accepted the request, not that the build or
+deployment succeeded; check the Render dashboard for the result. It does not
+wait for the separate Java CI workflow to pass.
+
+1. Make the repository accessible to Render and push the Dockerfile and this
+   configuration to `main`. Render supports public repository URLs without
+   auto-deploy; its documentation recommends connecting your Git provider for
+   repositories you own. A private repository needs Git credentials configured
+   in Render. GitHub Actions still triggers the deployments in either case.
+2. Create a Render API key and find your workspace owner ID in Render's
+   settings. Put them in the root `.env` as `RENDER_API_KEY` and
+   `RENDER_OWNER_ID`; do not commit them. See `.env.example` for the remaining
+   `TF_VAR_render_*` values. Set the region near Neon. Use a JDBC URL with the
+   Neon pooled hostname for the application and the direct hostname for Flyway,
+   both with `sslmode=require`; provide the database username and password
+   separately. Set the frontend origin and a random JWT secret of at least 32
+   characters. Create a hosted Redis instance and use its connection URL; the
+   local Docker Redis cannot be reached from Render. Set the BazaarLink key if
+   that feature is needed. Variables already set in the shell take precedence.
+3. Run `npm run tf:render -- init` and
+   `npm run tf:render -- plan -out=render.tfplan`. Review the entire plan,
+   especially the `free` plan and resource actions, then run
+   `npm run tf:render -- apply render.tfplan`. Creation can trigger an initial
+   deployment before GitHub Actions is configured. If the service already
+   exists, import it instead of creating a duplicate.
+4. In GitHub repository Settings > Secrets and variables > Actions, add
+   `RENDER_API_KEY` containing a Render API key and `RENDER_SERVICE_ID`
+   containing the service ID from `npm run tf:render -- output -raw backend_service_id`.
+   The API key grants account access; keep it private. After these secrets are set,
+   push a commit to `main` and check both GitHub Actions and Render deploy logs.
+   A push before this secret exists fails the workflow; push another commit
+   after configuring it.
+5. Set `API_BASE_URL` in Vercel Production to the backend URL shown by
+   `npm run tf:render -- output backend_url`, then redeploy the frontend.
+   Spring Boot runs Flyway on startup against the direct database endpoint.
+
+Terraform state and saved plans contain backend secrets even when values are
+marked sensitive. Keep them out of Git, restrict access and back up state
+securely; use encrypted remote state with locking for shared access. Commit the
+provider lock file. Render's free service sleeps after inactivity and has usage
+limits; review the current [free tier limits](https://render.com/docs/free).
+Provider v1.9.1 has a reported [free-service update issue](https://github.com/render-oss/terraform-provider-render/issues/80)
+involving maintenance mode. If an update fails, inspect the issue and state;
+do not replace the service blindly. Configuration changes do not automatically
+deploy with this setup: trigger a deployment after applying them.

@@ -26,6 +26,8 @@ dist-ssr
 *.sw?
 
 .env
+.env.*
+!.env.example
 
 # Spring Boot
 apps/api/target/
