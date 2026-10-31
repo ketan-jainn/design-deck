@@ -5,13 +5,13 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health
   endpoint:
     health:
-      show-details: always
-  info:
-    env:
-      enabled: true
+      show-details: never
+      show-components: never
+      probes:
+        enabled: true
 
 info:
   app:

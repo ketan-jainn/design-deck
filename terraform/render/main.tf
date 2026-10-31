@@ -15,19 +15,17 @@ provider "render" {
 variable "render_region" {
   description = "Render region; choose one close to the Neon database."
   type        = string
-  default     = "oregon"
+  default     = "singapore"
 }
 
 variable "render_database_url" {
-  description = "Neon pooled JDBC URL, including sslmode=require."
+  description = "Neon pooled JDBC URL with sslmode=require or verify-full."
   type        = string
   sensitive   = true
-}
-
-variable "render_flyway_url" {
-  description = "Neon direct JDBC URL for Flyway migrations."
-  type        = string
-  sensitive   = true
+  validation {
+    condition     = can(regex("^jdbc:postgresql://[^/]+/[^?]+\\?([^#]*&)?sslmode=(require|verify-ca|verify-full)(&|$)", var.render_database_url))
+    error_message = "Provide a PostgreSQL JDBC URL with sslmode=require, verify-ca, or verify-full."
+  }
 }
 
 variable "render_database_username" {
@@ -38,12 +36,6 @@ variable "render_database_username" {
 variable "render_database_password" {
   type      = string
   sensitive = true
-}
-
-variable "render_redis_url" {
-  description = "Hosted Redis URL, using rediss:// when TLS is required."
-  type        = string
-  sensitive   = true
 }
 
 variable "render_jwt_secret" {
@@ -68,10 +60,26 @@ variable "render_bazaarlink_api_key" {
   default     = ""
 }
 
+variable "render_bazaarlink_model" {
+  description = "BazaarLink model used for AI grading."
+  type        = string
+  default     = "qwen/qwen3.7-flash:free"
+}
+
+resource "render_keyvalue" "cache" {
+  name              = "design-deck-key-value"
+  plan              = "free"
+  region            = var.render_region
+  max_memory_policy = "noeviction"
+  persistence_mode  = "off"
+  ip_allow_list     = []
+}
+
 resource "render_web_service" "web" {
-  name   = "design-deck-backend"
-  plan   = "free"
-  region = var.render_region
+  name              = "design-deck-backend"
+  plan              = "free"
+  region            = var.render_region
+  health_check_path = "/actuator/health/liveness"
 
   runtime_source = {
     docker = {
@@ -87,11 +95,11 @@ resource "render_web_service" "web" {
     DATABASE_URL       = { value = var.render_database_url }
     DATABASE_USERNAME  = { value = var.render_database_username }
     DATABASE_PASSWORD  = { value = var.render_database_password }
-    SPRING_FLYWAY_URL  = { value = var.render_flyway_url }
-    REDIS_URL          = { value = var.render_redis_url }
+    REDIS_URL          = { value = render_keyvalue.cache.connection_info.internal_connection_string }
     JWT_SECRET         = { value = var.render_jwt_secret }
     FRONTEND_URL       = { value = var.render_frontend_url }
     BAZAARLINK_API_KEY = { value = var.render_bazaarlink_api_key }
+    BAZAARLINK_MODEL   = { value = var.render_bazaarlink_model }
     JAVA_TOOL_OPTIONS  = { value = "-Xms64m -Xmx256m -XX:+UseSerialGC" }
   }
 }

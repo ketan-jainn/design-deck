@@ -189,13 +189,19 @@ committed. Continue configuring pooled `DATABASE_URL` and direct
 
 ## Deploy the backend to Render
 
+For production Terraform commands, fill in the root `.env.prod` file and use
+`npm run tf:vercel:prod -- plan`, `npm run tf:neon:prod -- plan`, or
+`npm run tf:render:prod -- plan`. Run the corresponding command with `init`
+first when needed. These production scripts load `.env.prod`; existing shell
+environment variables take precedence. The other `tf:*` scripts load `.env`.
+
 `terraform/render` manages a free Render web service separately from Neon and
 Vercel. Render builds `apps/api/Dockerfile` from `main`; GitHub Actions triggers
 later deployments through the Render API. Render automatic deployment is
-disabled. The workflow runs only on pushes to `main` and requests the pushed
-commit. It reports that Render accepted the request, not that the build or
-deployment succeeded; check the Render dashboard for the result. It does not
-wait for the separate Java CI workflow to pass.
+disabled. The workflow runs when a push to `main` changes `apps/api/**` and
+requests the pushed commit. It reports that Render accepted the request, not
+that the build or deployment succeeded; check the Render dashboard for the
+result. It does not wait for the separate Java CI workflow to pass.
 
 1. Make the repository accessible to Render and push the Dockerfile and this
    configuration to `main`. Render supports public repository URLs without
@@ -209,9 +215,13 @@ wait for the separate Java CI workflow to pass.
    Neon pooled hostname for the application and the direct hostname for Flyway,
    both with `sslmode=require`; provide the database username and password
    separately. Set the frontend origin and a random JWT secret of at least 32
-   characters. Create a hosted Redis instance and use its connection URL; the
-   local Docker Redis cannot be reached from Render. Set the BazaarLink key if
-   that feature is needed. Variables already set in the shell take precedence.
+   characters. Terraform creates a free Render Key Value instance in the same
+   region and passes its internal connection URL to the API; no Redis URL is
+   needed in `.env`. The local Docker Redis cannot be reached from Render.
+   Set the BazaarLink key if
+   that feature is needed. Set `TF_VAR_render_bazaarlink_model` to choose the
+   grading model; it defaults to `qwen/qwen3.7-flash:free`. Variables already
+   set in the shell take precedence.
 3. Run `npm run tf:render -- init` and
    `npm run tf:render -- plan -out=render.tfplan`. Review the entire plan,
    especially the `free` plan and resource actions, then run
@@ -222,9 +232,10 @@ wait for the separate Java CI workflow to pass.
    `RENDER_API_KEY` containing a Render API key and `RENDER_SERVICE_ID`
    containing the service ID from `npm run tf:render -- output -raw backend_service_id`.
    The API key grants account access; keep it private. After these secrets are set,
-   push a commit to `main` and check both GitHub Actions and Render deploy logs.
-   A push before this secret exists fails the workflow; push another commit
-   after configuring it.
+   push a commit that changes `apps/api/` to `main` and check both GitHub
+   Actions and Render deploy logs. A matching push before these secrets exist
+   fails the workflow; push another API change after configuring them, or trigger
+   a deployment from the Render dashboard.
 5. Set `API_BASE_URL` in Vercel Production to the backend URL shown by
    `npm run tf:render -- output backend_url`, then redeploy the frontend.
    Spring Boot runs Flyway on startup against the direct database endpoint.
@@ -238,3 +249,19 @@ Provider v1.9.1 has a reported [free-service update issue](https://github.com/re
 involving maintenance mode. If an update fails, inspect the issue and state;
 do not replace the service blindly. Configuration changes do not automatically
 deploy with this setup: trigger a deployment after applying them.
+
+The Render health check uses `/actuator/health/liveness`. It exposes only the
+application's liveness status and does not check Neon or Key Value availability.
+Other actuator paths, including metrics and detailed health, are blocked.
+The Render Terraform inputs require TLS for both Neon JDBC URLs. Render Key
+Value uses its internal URL on Render's same-region private network; this URL
+normally uses `redis://` and does not provide TLS. External access is disabled.
+`sslmode=require` encrypts the Neon connection; stronger certificate
+verification requires the JDBC driver to be configured with an appropriate CA.
+
+Free Render Key Value does not persist data and loses its contents on restart.
+This includes the JWT logout blocklist: a previously logged-out token can become
+valid again until it expires. The `noeviction` policy prevents memory pressure
+from silently evicting blocklist entries, but writes fail when memory is full.
+Only one free Key Value instance is allowed per workspace. If one already
+exists, import it rather than creating a duplicate; review the plan carefully.

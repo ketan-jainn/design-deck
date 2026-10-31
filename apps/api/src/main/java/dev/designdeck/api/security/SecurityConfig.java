@@ -4,6 +4,7 @@ import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -19,6 +20,8 @@ public class SecurityConfig {
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
             .dispatcherTypeMatchers(DispatcherType.ASYNC, DispatcherType.ERROR).permitAll()
+            .requestMatchers(HttpMethod.GET, "/actuator/health/liveness").permitAll()
+            .requestMatchers("/actuator", "/actuator/**").denyAll()
             .requestMatchers("/api/auth/**", "/api/categories", "/api/questions/**").permitAll()
             .anyRequest().authenticated())
         .exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, authException) ->
