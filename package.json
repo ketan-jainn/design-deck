@@ -10,7 +10,7 @@
     "dev:web": "npm --workspace apps/web run dev",
     "dev:api": "dotenv -e .env -- mvn -f apps/api/pom.xml spring-boot:run",
     "tf": "dotenv -e .env -- terraform -chdir=terraform/vercel",
-    "tf:vercel": "dotenv -e .env -- terraform -chdir=terraform/vercel",
+    "tf:vercel": "dotenv -e .env.prod -- terraform -chdir=terraform/vercel",
     "tf:neon": "dotenv -e .env.prod -- terraform -chdir=terraform/neon",
     "tf:render": "dotenv -e .env.prod -- terraform -chdir=terraform/render",
     "tf:vercel:prod": "dotenv --no-expand -e .env.prod -- terraform -chdir=terraform/vercel",

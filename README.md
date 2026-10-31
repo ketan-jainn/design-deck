@@ -124,9 +124,12 @@ Vercel may pause service when the free allowance is exhausted.
    `vercel_team_id`, and `VERCEL_TOKEN` containing a Vercel API token with
    access to that team and project. The local `.env` is not uploaded to GitHub
    Actions. Keep the token out of Terraform state.
-4. In the Vercel project's **Production** environment settings, set
-   `API_BASE_URL` to the deployed backend's HTTPS base URL and
-   `COOKIE_SECURE` to `true`. The frontend needs the backend to provide its API;
+4. In the root `.env.prod`, set `TF_VAR_vercel_api_base_url` to the deployed
+   Render backend's HTTPS origin. The Vercel Terraform configuration manages
+   `API_BASE_URL` for Production; use `npm run tf:vercel:prod -- plan` and
+   apply the reviewed plan. If `API_BASE_URL` already exists in Vercel, import
+   it into Terraform state before applying to avoid a duplicate. Set
+   `COOKIE_SECURE` to `true` in Vercel Production. The frontend needs the backend to provide its API;
    deploying the frontend alone does not create the backend or database.
 5. Commit the Terraform configuration, lock file, and deployment workflow,
    then push to `main`. The workflow checks out that commit, builds the npm
@@ -236,8 +239,9 @@ result. It does not wait for the separate Java CI workflow to pass.
    Actions and Render deploy logs. A matching push before these secrets exist
    fails the workflow; push another API change after configuring them, or trigger
    a deployment from the Render dashboard.
-5. Set `API_BASE_URL` in Vercel Production to the backend URL shown by
-   `npm run tf:render -- output backend_url`, then redeploy the frontend.
+5. Set `TF_VAR_vercel_api_base_url` in `.env.prod` to the backend URL shown by
+   `npm run tf:render:prod -- output -raw backend_url`, apply the Vercel
+   Terraform plan, then redeploy the frontend.
    Spring Boot runs Flyway on startup against the direct database endpoint.
 
 Terraform state and saved plans contain backend secrets even when values are
