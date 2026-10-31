@@ -30,3 +30,12 @@ dist-ssr
 # Spring Boot
 apps/api/target/
 .idea/
+
+# Terraform and Vercel local files
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+*.tfvars.json
+.vercel/
